@@ -1,0 +1,30 @@
+# config/planner_params.yaml
+# Global planner parameters for A* and D* Lite (Nav2 compatible)
+
+astar_planner:
+  ros__parameters:
+    use_global_planner: true
+    heuristic_weight: 1.2          # ≤1.0 admissible, >1.0 faster sub-optimal
+    allow_diagonal: true
+    use_costmap_inflation: true
+    lethal_cost_threshold: 100
+    planner_name: "AStarPlanner"
+
+dstar_lite_planner:
+  ros__parameters:
+    use_global_planner: true
+    heuristic_weight: 1.0          # Must be admissible for optimality
+    allow_diagonal: true
+    allow_unknown: false
+    replan_on_costmap_change: true
+    km_update_factor: 1.0          # Controls how aggressively km increases
+    planner_name: "DStarLitePlanner"
+
+# Shared benchmarking parameters (used by benchmark_node)
+benchmark:
+  ros__parameters:
+    trials: 200
+    seed: 42
+    dynamic_obstacles_per_trial: 10
+    min_goal_distance_cells: 300
+    output_csv: "reports/results/travel_time_comparison.csv"
