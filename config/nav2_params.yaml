@@ -1,0 +1,45 @@
+# config/nav2_params.yaml
+controller_server:
+  ros__parameters:
+    use_sim_time: true
+    controller_frequency: 20.0
+
+    controller_plugins: ["FollowPath"]
+    FollowPath:
+      plugin: "dwb_core::DWBLocalPlanner"
+
+planner_server:
+  ros__parameters:
+    use_sim_time: true
+    expected_planner_frequency: 2.0
+
+    # We only use one plugin slot — our custom GlobalPlanner wrapper
+    planner_plugins: ["GridBased"]
+
+    GridBased:
+      plugin: "nav2_global_planner/GlobalPlanner"   # ← This will be our wrapper
+      allow_unknown: true
+      # planner_name: removed on purpose — we control selection via parameter below
+      # use_astar: true → legacy, ignored
+
+    # THIS is the real selector (used by our wrapper)
+    global_planner: "dstar_lite_planner"   # launch file can override: astar_planner or dstar_lite_planner
+
+# ===================================================================
+# Custom planner parameter blocks (read by our wrapper)
+# ===================================================================
+astar_planner:
+  ros__parameters:
+    heuristic_weight: 1.2
+    allow_diagonal: true
+
+dstar_lite_planner:
+  ros__parameters:
+    heuristic_weight: 1.0
+    allow_diagonal: true
+    replan_on_costmap_change: true
+
+# Optional: keep BT navigator happy
+bt_navigator:
+  ros__parameters:
+    use_sim_time: true
