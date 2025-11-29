@@ -1,0 +1,92 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="dynamic_indoor_office">
+
+    <!-- Physics & Lighting -->
+    <physics name="default_physics" type="ode">
+      <max_step_size>0.01</max_step_size>
+      <real_time_update_rate>0</real_time_update_rate>
+    </physics>
+
+    <gravity>0 0 -9.81</gravity>
+
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- === EXACT MATCHING WALLS FROM indoor_grid.png (50m × 40m) === -->
+    <include>
+      <uri>model://indoor_grid</uri>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
+
+    <!-- === TURTLEBOT3 BURGER === -->
+    <include>
+      <uri>model://turtlebot3_burger</uri>
+      <name>turtlebot3</name>
+      <pose>0 0 0.1 0 0 0</pose>
+    </include>
+
+    <!-- === 8 MOVING PEOPLE (realistic office paths) === -->
+    <!-- Person 1: North-South corridor -->
+    <actor name="person_1">
+      <pose>12 -10 0.5 0 0 0</pose>
+      <skin><filename>walk.dae</filename></skin>
+      <animation name="walking"><filename>walk.dae</filename><interpolate_x>true</interpolate_x></animation>
+      <script>
+        <loop>true</loop>
+        <auto_start>true</auto_start>
+        <trajectory id="0" type="walking" duration="60.0">
+          <waypoint><time>0.0</time>  <pose>12 -10 0 0 0 0</pose></waypoint>
+          <waypoint><time>20.0</time> <pose>12  15 0 0 0 0</pose></waypoint>
+          <waypoint><time>40.0</time> <pose>12  -8 0 0 0 0</pose></waypoint>
+          <waypoint><time>60.0</time> <pose>12 -10 0 0 0 0</pose></waypoint>
+        </trajectory>
+      </script>
+    </actor>
+
+    <!-- Person 2: East-West hallway -->
+    <actor name="person_2">
+      <pose>-15 10 0.5 0 0 0</pose>
+      <skin><filename>walk.dae</filename></skin>
+      <animation name="walking"><filename>walk.dae</filename></animation>
+      <script>
+        <loop>true</loop>
+        <auto_start>true</auto_start>
+        <trajectory id="0" type="walking" duration="70.0">
+          <waypoint><time>0.0</time>  <pose>-15 10 0 0 0 0</pose></waypoint>
+          <waypoint><time>25.0</time> <pose> 18 10 0 0 0 0</pose></waypoint>
+          <waypoint><time>50.0</time> <pose>-12 10 0 0 0 0</pose></waypoint>
+          <waypoint><time>70.0</time> <pose>-15 10 0 0 0 0</pose></waypoint>
+        </trajectory>
+      </script>
+    </actor>
+
+    <!-- Person 3: Diagonal cross -->
+    <actor name="person_3">
+      <pose>-10 -12 0.5 0 0 0</pose>
+      <skin><filename>walk.dae</filename></skin>
+      <animation name="walking"><filename>walk.dae</filename></animation>
+      <script>
+        <loop>true</loop>
+        <auto_start>true</auto_start>
+        <trajectory id="0" type="walking" duration="80.0">
+          <waypoint><time>0.0</time>  <pose>-10 -12 0 0 0 0</pose></waypoint>
+          <waypoint><time>40.0</time> <pose> 15  14 0 0 0 0</pose></waypoint>
+          <waypoint><time>80.0</time> <pose>-10 -12 0 0 0 0</pose></waypoint>
+        </trajectory>
+      </script>
+    </actor>
+
+    <!-- Person 4–8: Random office wanderers -->
+    <actor name="person_4"><pose>5 5 0.5 0 0 0</pose><skin><filename>walk.dae</filename></skin><animation name="walking"><filename>walk.dae</filename></animation><script><loop>true</loop><auto_start>true</auto_start><trajectory id="0" type="walking" duration="90.0"><waypoint><time>0.0</time><pose>5 5 0 0 0 0</pose></waypoint><waypoint><time>30.0</time><pose>5 -18 0 0 0 0</pose></waypoint><waypoint><time>60.0</time><pose>-18 -18 0 0 0 0</pose></waypoint><waypoint><time>90.0</time><pose>5 5 0 0 0 0</pose></waypoint></trajectory></script></actor>
+    <actor name="person_5"><pose>18 -5 0.5 0 0 0</pose><skin><filename>walk.dae</filename></skin><animation name="walking"><filename>walk.dae</filename></animation><script><loop>true</loop><auto_start>true</auto_start><trajectory id="0" type="walking" duration="75.0"><waypoint><time>0.0</time><pose>18 -5 0 0 0 0</pose></waypoint><waypoint><time>25.0</time><pose>18 12 0 0 0 0</pose></waypoint><waypoint><time>50.0</time><pose>-8 12 0 0 0 0</pose></waypoint><waypoint><time>75.0</time><pose>18 -5 0 0 0 0</pose></waypoint></trajectory></script></actor>
+    <actor name="person_6"><pose>-8 0 0.5 0 0 0</pose><skin><filename>walk.dae</filename></skin><animation name="walking"><filename>walk.dae</filename></animation><script><loop>true</loop><auto_start>true</auto_start><trajectory id="0" type="walking" duration="65.0"><waypoint><time>0.0</time><pose>-8 0 0 0 0 0</pose></waypoint><waypoint><time>20.0</time><pose>-8 18 0 0 0 0</pose></waypoint><waypoint><time>45.0</time><pose>10 18 0 0 0 0</pose></waypoint><waypoint><time>65.0</time><pose>-8 0 0 0 0 0</pose></waypoint></trajectory></script></actor>
+    <actor name="person_7"><pose>0 -15 0.5 0 0 0</pose><skin><filename>walk.dae</filename></skin><animation name="walking"><filename>walk.dae</filename></animation><script><loop>true</loop><auto_start>true</auto_start><trajectory id="0" type="walking" duration="55.0"><waypoint><time>0.0</time><pose>0 -15 0 0 0 0</pose></waypoint><waypoint><time>18.0</time><pose>0 10 0 0 0 0</pose></waypoint><waypoint><time>36.0</time><pose>-20 10 0 0 0 0</pose></waypoint><waypoint><time>55.0</time><pose>0 -15 0 0 0 0</pose></waypoint></trajectory></script></actor>
+    <actor name="person_8"><pose>15 0 0.5 0 0 0</pose><skin><filename>walk.dae</filename></skin><animation name="walking"><filename>walk.dae</filename></animation><script><loop>true</loop><auto_start>true</auto_start><trajectory id="0" type="walking" duration="70.0"><waypoint><time>0.0</time><pose>15 0 0 0 0 0</pose></waypoint><waypoint><time>25.0</time><pose>15 -18 0 0 0 0</pose></waypoint><waypoint><time>50.0</time><pose>-15 -18 0 0 0 0</pose></waypoint><waypoint><time>70.0</time><pose>15 0 0 0 0 0</pose></waypoint></trajectory></script></actor>
+
+  </world>
+</sdf>
