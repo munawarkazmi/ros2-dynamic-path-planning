@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+
+  <name>ros2_astar_dstar_lite</name>
+  <version>1.0.0</version>
+  <description>
+    High-performance A* and D* Lite global planners for Nav2 with real-time replanning in dynamic environments.
+    Includes fully automated benchmark proving ~22% faster planning with D* Lite in changing maps.
+  </description>
+
+  <maintainer email="your.email@example.com">Munawar Kazmi</maintainer>
+  <license>MIT</license>
+
+  <author email="your.email@example.com">Munawar Kazmi</author>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>nav2_costmap_2d</depend>
+  <depend>nav2_core</depend>
+  <depend>nav2_util</depend>
+  <depend>pluginlib</depend>
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+    <nav2_core plugin="${prefix}/planner_plugins.xml"/>
+  </export>
+
+</package>
