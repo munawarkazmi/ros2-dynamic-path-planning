@@ -1,0 +1,28 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="indoor_grid">
+    <static>true</static>
+    <link name="wall_link">
+      <collision name="wall_collision">
+        <geometry>
+          <height_map>
+            <uri>file://$(find ros2_astar_dstar_lite)/maps/indoor_grid.png</uri>
+            <size>50 40 2.0</size>   <!-- 1000×800 px @ 0.05 m → 50 m × 40 m × 2 m high walls -->
+            <pos>0 0 1.0</pos>
+          </height_map>
+        </geometry>
+      </collision>
+      <visual name="wall_visual">
+        <geometry>
+          <box><size>50 40 0.1</size></box>
+        </geometry>
+        <material>
+          <script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Grey</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>
