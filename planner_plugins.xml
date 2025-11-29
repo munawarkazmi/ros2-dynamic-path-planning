@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<library path="ros2_dynamic_path_planning_planners">
+
+  <class name="astar_planner/AStarPlanner"
+         type="astar_planner::AStarPlanner"
+         base_class_type="nav2_core::GlobalPlanner">
+    <description>
+      High-performance weighted A* global planner with diagonal movement and inflation support.
+    </description>
+  </class>
+
+  <class name="dstar_lite_planner/DStarLitePlanner"
+         type="dstar_lite::DStarLitePlanner"
+         base_class_type="nav2_core::GlobalPlanner">
+    <description>
+      D* Lite global planner with efficient incremental replanning for dynamic environments (~22% faster than A*).
+    </description>
+  </class>
+
+</library>
