@@ -1,0 +1,7 @@
+# maps/indoor_grid.yaml
+image: indoor_grid.png
+resolution: 0.05
+origin: [-25.0, -20.0, 0.0]   # places (0,0) robot origin near the center
+occupied_thresh: 0.65
+free_thresh: 0.196
+negate: 0
