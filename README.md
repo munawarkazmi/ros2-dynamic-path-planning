@@ -15,7 +15,7 @@ Zero hacks · Pure Nav2 plugins · One-command benchmark · Live moving obstacle
 
 ## Results – 200 Trials (seed 42)
 
-```text
+``text
 A* average time      : 3.298 s
 D* Lite average time : 2.560 s
 → D* Lite is 22.37% faster
