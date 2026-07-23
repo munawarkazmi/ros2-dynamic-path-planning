@@ -23,12 +23,23 @@ D* Lite won 197 / 200 trials
 Full data → reports/results/travel_time_comparison.csv
 ```
 
+![Benchmark summary](docs/figures/benchmark_summary.png)
 
-### Environment
+### The planning problem, visualized
 
-50 m × 40 m indoor office · 0.05 m resolution · 8 moving people
+Both figures below are real algorithm runs on this repository's actual occupancy map
+(50 m × 40 m indoor office, 0.05 m resolution; the Gazebo world adds 8 moving people).
 
-![Indoor Office Map](maps/indoor_grid.png)
+**A global plan across the building.** The blue cloud is every node the search expanded;
+the navy line is the resulting path.
+
+![A* global plan](docs/figures/astar_plan.png)
+
+**What happens when someone steps into the route.** The planner repairs the path around
+the new obstacle mid-journey. This is the event the benchmark measures 200 times: D* Lite
+repairs incrementally while A* starts over, which is where its 22% advantage comes from.
+
+![Replanning around a new obstacle](docs/figures/replan_obstacle.png)
 
 
 ## Quick Start (ROS 2 Humble / Iron / Jazzy)
