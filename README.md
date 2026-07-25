@@ -1,5 +1,5 @@
 # ROS 2 Dynamic Path Planning  
-**A* vs D* Lite Global Planners for Nav2 – Real-Time Replanning in Dynamic Environments**
+**A* vs D* Lite Global Planners for Nav2 - Real-Time Replanning in Dynamic Environments**
 
 [![ROS 2 Humble](https://img.shields.io/badge/ROS_2-Humble-brightgreen)](https://docs.ros.org/en/humble/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -13,7 +13,7 @@ Zero hacks · Pure Nav2 plugins · One-command benchmark · Live moving obstacle
 > D* Lite smoothly adapts when people walk into the path.  
 > A* throws away everything and replans from scratch.
 
-## Results – 200 Trials (seed 42)
+## Results - 200 Trials (seed 42)
 
 ```text
 A* average time      : 3.298 s
