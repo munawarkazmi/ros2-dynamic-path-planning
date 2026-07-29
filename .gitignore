@@ -65,7 +65,6 @@ worlds/*.world~
 
 # Local testing
 test_results/
-reports/results/*.csv
-!reports/results/.gitkeep
 
-reports/results/travel_time_comparison.csv
+# Generated from maps/indoor_grid.png by core/tools/png_to_pgm.py
+*.pgm

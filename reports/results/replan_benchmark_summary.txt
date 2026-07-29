@@ -1,0 +1,13 @@
+map: maps/indoor_grid.pgm  784x1168 cells
+trials=200 events=8 seed=42 radius=6 advance=20
+
+=== initial plans (200 trials) ===
+A*      mean 12.186 ms  median 5.703 ms
+D* Lite mean 33.322 ms  median 22.702 ms
+
+=== replans after path-blocking obstacle (1493 events) ===
+A*      mean 9.418 ms  median 2.718 ms  expansions/event 41298
+D* Lite mean 2.208 ms  median 0.245 ms  expansions/event 3679
+speedup (mean A* / mean D*): 4.27x
+D* Lite faster on 993 / 1493 replan events
+path cost mismatches (must be 0): 0

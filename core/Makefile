@@ -9,9 +9,15 @@ BUILD := build
 SRCS  := src/astar.cpp src/dstar_lite.cpp
 OBJS  := $(SRCS:src/%.cpp=$(BUILD)/%.o)
 
-.PHONY: all test clean
+.PHONY: all test benchmark clean
 
 all: test
+
+benchmark: $(BUILD)/benchmark
+	@echo "run: $(BUILD)/benchmark --map ../maps/indoor_grid.pgm --out ../reports/results/replan_benchmark.csv"
+
+$(BUILD)/benchmark: benchmark/benchmark_main.cpp $(OBJS) | $(BUILD)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< $(OBJS) -o $@
 
 $(BUILD):
 	mkdir -p $(BUILD)
