@@ -1,19 +1,19 @@
 <?xml version="1.0"?>
 <library path="ros2_dynamic_path_planning_planners">
 
-  <class name="astar_planner/AStarPlanner"
-         type="astar_planner::AStarPlanner"
+  <class name="ros2_dynamic_path_planning/AStarPlanner"
+         type="ros2_dynamic_path_planning::AStarGlobalPlanner"
          base_class_type="nav2_core::GlobalPlanner">
     <description>
-      High-performance weighted A* global planner with diagonal movement and inflation support.
+      A* global planner (octile heuristic, exact integer cost metric); replans from scratch on every request.
     </description>
   </class>
 
-  <class name="dstar_lite_planner/DStarLitePlanner"
-         type="dstar_lite::DStarLitePlanner"
+  <class name="ros2_dynamic_path_planning/DStarLitePlanner"
+         type="ros2_dynamic_path_planning::DStarGlobalPlanner"
          base_class_type="nav2_core::GlobalPlanner">
     <description>
-      D* Lite global planner with efficient incremental replanning for dynamic environments (~22% faster than A*).
+      D* Lite global planner (Koenig and Likhachev); repairs its previous search incrementally as the costmap changes.
     </description>
   </class>
 

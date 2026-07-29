@@ -32,6 +32,9 @@ public:
 
   [[nodiscard]] std::size_t nodesExpanded() const noexcept { return nodes_expanded_; }
 
+  // Cells expanded by the most recent plan() call (for visualization).
+  [[nodiscard]] std::vector<Cell> expandedCells(const Grid& grid) const;
+
 private:
   struct OpenEntry {
     CostT f;

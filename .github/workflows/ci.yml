@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  core:
+    name: Core tests + benchmark smoke run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Pillow (map conversion)
+        run: pip install pillow
+
+      - name: Convert map PNG to PGM
+        run: python3 core/tools/png_to_pgm.py maps/indoor_grid.png maps/indoor_grid.pgm
+
+      - name: Build and run Dijkstra-validated planner tests
+        run: make -C core test
+
+      - name: Build benchmark
+        run: make -C core benchmark
+
+      - name: Benchmark smoke run (20 trials, exits nonzero on any cost mismatch)
+        run: |
+          mkdir -p /tmp/results
+          core/build/benchmark --map maps/indoor_grid.pgm \
+            --out /tmp/results/replan_benchmark_ci.csv --trials 20 --events 8 --seed 42
+
+      - name: Upload CI benchmark data
+        uses: actions/upload-artifact@v4
+        with:
+          name: replan-benchmark-ci
+          path: /tmp/results/replan_benchmark_ci.csv
+
+  ros:
+    name: Nav2 plugin build (ROS 2 Humble)
+    runs-on: ubuntu-latest
+    container: ros:humble
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nav2 build dependencies
+        run: |
+          apt-get update
+          apt-get install -y \
+            ros-humble-nav2-core \
+            ros-humble-nav2-costmap-2d \
+            ros-humble-nav2-util
+        shell: bash
+
+      - name: colcon build
+        run: |
+          . /opt/ros/humble/setup.sh
+          mkdir -p /ws/src
+          cp -r "$GITHUB_WORKSPACE" /ws/src/ros2_dynamic_path_planning
+          cd /ws
+          colcon build --packages-select ros2_dynamic_path_planning --event-handlers console_direct+
+        shell: bash

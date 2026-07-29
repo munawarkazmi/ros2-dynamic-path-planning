@@ -6,6 +6,17 @@
 
 namespace planning {
 
+std::vector<Cell> AStarPlanner::expandedCells(const Grid& grid) const {
+  std::vector<Cell> cells;
+  const std::size_t w = grid.width();
+  for (std::size_t idx = 0; idx < closed_.size() && idx < grid.size(); ++idx) {
+    if (stamp_[idx] == epoch_ && closed_[idx]) {
+      cells.emplace_back(idx % w, idx / w);
+    }
+  }
+  return cells;
+}
+
 std::optional<Path> AStarPlanner::plan(const Grid& grid,
                                        std::size_t start_x, std::size_t start_y,
                                        std::size_t goal_x, std::size_t goal_y) {
