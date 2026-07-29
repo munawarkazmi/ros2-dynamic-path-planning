@@ -21,6 +21,9 @@ jobs:
       - name: Build and run Dijkstra-validated planner tests
         run: make -C core test
 
+      - name: Fuzz incremental replanning (8 modes x 3000 seeds vs Dijkstra)
+        run: make -C core fuzz
+
       - name: Build benchmark
         run: make -C core benchmark
 

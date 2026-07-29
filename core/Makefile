@@ -9,9 +9,15 @@ BUILD := build
 SRCS  := src/astar.cpp src/dstar_lite.cpp
 OBJS  := $(SRCS:src/%.cpp=$(BUILD)/%.o)
 
-.PHONY: all test benchmark clean
+.PHONY: all test fuzz benchmark clean
 
-all: test
+all: test fuzz
+
+$(BUILD)/fuzz_planners: tests/fuzz_planners.cpp $(OBJS) | $(BUILD)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< $(OBJS) -o $@
+
+fuzz: $(BUILD)/fuzz_planners
+	./$(BUILD)/fuzz_planners
 
 benchmark: $(BUILD)/benchmark
 	@echo "run: $(BUILD)/benchmark --map ../maps/indoor_grid.pgm --out ../reports/results/replan_benchmark.csv"

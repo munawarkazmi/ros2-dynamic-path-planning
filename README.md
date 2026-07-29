@@ -85,6 +85,14 @@ validates against a reference Dijkstra with exact equality:
 - an incremental replan after a local change expands far fewer vertices than a
   fresh search - the algorithm's reason to exist, asserted in CI.
 
+On top of the unit tests, [core/tests/fuzz_planners.cpp](core/tests/fuzz_planners.cpp)
+fuzzes the incremental machinery across eight scenario modes (every combination
+of cost repricing, batched edits, and a moving start) x 3,000 seeds:
+**23,748 scenarios and 185,237 incremental replans, each checked against
+Dijkstra with exact equality, 0 failures**. The run is deterministic, so those
+counts reproduce exactly via `make -C core fuzz` (also run in CI). This is the
+harness that originally caught the floating-point key-tie bug described above.
+
 ## Quick start - core (no ROS required)
 
 ```bash
