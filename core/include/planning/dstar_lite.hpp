@@ -30,9 +30,6 @@
 
 namespace planning {
 
-using Cell = std::pair<std::size_t, std::size_t>;
-using Path = std::vector<Cell>;
-
 class DStarLitePlanner {
 public:
   // The planner keeps its own copy of the grid; apply map changes

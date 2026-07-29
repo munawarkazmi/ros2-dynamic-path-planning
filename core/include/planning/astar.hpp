@@ -16,9 +16,6 @@
 
 namespace planning {
 
-using Cell = std::pair<std::size_t, std::size_t>;
-using Path = std::vector<Cell>;
-
 class AStarPlanner {
 public:
   explicit AStarPlanner(bool allow_diagonal = true)

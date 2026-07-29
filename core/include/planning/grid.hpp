@@ -8,9 +8,13 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 namespace planning {
+
+using Cell = std::pair<std::size_t, std::size_t>;
+using Path = std::vector<Cell>;
 
 inline constexpr std::uint8_t kInscribed = 253;
 inline constexpr std::uint8_t kLethal = 254;
