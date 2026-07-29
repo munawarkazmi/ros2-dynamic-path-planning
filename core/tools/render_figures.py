@@ -109,6 +109,55 @@ def fig_replan(im, s, out):
     plt.close(fig)
 
 
+def fig_scatter(csv_path, out):
+    """Per-event structure of the benchmark: every replan event as a point."""
+    a_ms, d_ms, a_exp, d_exp = [], [], [], []
+    with open(csv_path) as f:
+        for row in csv.DictReader(f):
+            if row["event"] == "0" or row["cost_match"] != "1":
+                continue
+            if float(row["astar_cost_cells"]) < 0 or float(row["dstar_cost_cells"]) < 0:
+                continue
+            a_ms.append(float(row["astar_ms"]))
+            d_ms.append(float(row["dstar_ms"]))
+            a_exp.append(max(1, int(row["astar_expanded"])))
+            d_exp.append(max(1, int(row["dstar_expanded"])))
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 5.2))
+
+    ax1.scatter(a_ms, d_ms, s=9, c=NAVY, alpha=0.45, linewidths=0)
+    lims = [min(min(a_ms), min(d_ms)) * 0.7, max(max(a_ms), max(d_ms)) * 1.4]
+    ax1.plot(lims, lims, ls="--", c=GRAY, lw=1.2)
+    ax1.set_xscale("log")
+    ax1.set_yscale("log")
+    ax1.set_xlim(lims)
+    ax1.set_ylim(lims)
+    ax1.set_xlabel("A* replan time (ms)")
+    ax1.set_ylabel("D* Lite replan time (ms)")
+    below = sum(1 for a, d in zip(a_ms, d_ms) if d < a)
+    ax1.set_title(f"Replan time per event (n={len(a_ms)})\n"
+                  f"below the dashed line = D* Lite faster ({below} events)",
+                  fontsize=10)
+
+    ax2.scatter(a_exp, d_exp, s=9, c=NAVY, alpha=0.45, linewidths=0)
+    lims2 = [0.7, max(max(a_exp), max(d_exp)) * 1.4]
+    ax2.plot(lims2, lims2, ls="--", c=GRAY, lw=1.2)
+    ax2.set_xscale("log")
+    ax2.set_yscale("log")
+    ax2.set_xlim(lims2)
+    ax2.set_ylim(lims2)
+    ax2.set_xlabel("A* vertices expanded")
+    ax2.set_ylabel("D* Lite vertices expanded")
+    ax2.set_title("Search effort per event\n"
+                  "D* Lite's incremental repair reuses prior work", fontsize=10)
+
+    fig.suptitle("Every replan event from the committed 200-trial run (seed 42)",
+                 fontsize=12, color=NAVY)
+    fig.tight_layout()
+    fig.savefig(out, dpi=110)
+    plt.close(fig)
+
+
 def fig_benchmark(csv_path, out):
     a_ms, d_ms = [], []
     with open(csv_path) as f:
@@ -168,6 +217,7 @@ def main():
     fig_astar(im, s, f"{outdir}/astar_plan.png")
     fig_replan(im, s, f"{outdir}/replan_obstacle.png")
     fig_benchmark(bench_csv, f"{outdir}/benchmark_summary.png")
+    fig_scatter(bench_csv, f"{outdir}/replan_scatter.png")
     print("figures written")
 
 

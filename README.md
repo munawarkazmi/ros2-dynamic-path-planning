@@ -29,6 +29,14 @@ obstacle appears mid-route and the planner must recover**.
 
 ![Benchmark summary](docs/figures/benchmark_summary.png)
 
+Per-event structure of the same run - every one of the 1,493 replans as a
+point. D* Lite's repair cost stays in a narrow band regardless of how
+expensive the from-scratch search is, which is the algorithm's entire value
+proposition; the events above the diagonal are the honest flip side (trivial
+replans where its bookkeeping loses):
+
+![Per-event scatter](docs/figures/replan_scatter.png)
+
 Full per-event data: [reports/results/replan_benchmark.csv](reports/results/replan_benchmark.csv),
 produced by [core/benchmark/benchmark_main.cpp](core/benchmark/benchmark_main.cpp) with
 `--trials 200 --seed 42` on this repository's map (g++ -O2, WSL2 / Ubuntu 26.04).
