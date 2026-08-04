@@ -60,6 +60,15 @@ previous search that is still valid.
 
 ![Replanning around a new obstacle](docs/figures/replan_obstacle.png)
 
+## Plain-language guide
+
+For a non-specialist reader there is a five-page guide,
+[docs/explainer/explainer.pdf](docs/explainer/explainer.pdf), which explains
+what replanning costs, why repair beats rebuilding on the expensive events
+and loses on the trivial ones, and how the floating-point key-tie bug was
+caught. Its source is committed alongside it and builds with `latexmk -pdf
+explainer.tex`.
+
 ## Benchmark methodology
 
 Per trial: a random reachable start/goal pair is sampled (seeded RNG, min 15 m
