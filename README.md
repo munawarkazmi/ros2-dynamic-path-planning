@@ -107,8 +107,11 @@ fuzzes the incremental machinery across eight scenario modes (every combination
 of cost repricing, batched edits, and a moving start) x 3,000 seeds:
 **23,748 scenarios and 185,237 incremental replans, each checked against
 Dijkstra with exact equality, 0 failures**. The run is deterministic, so those
-counts reproduce exactly via `make -C core fuzz` (also run in CI). This is the
-harness that originally caught the floating-point key-tie bug described above.
+counts reproduce exactly via `make -C core fuzz` (also run in CI), which writes
+them to [reports/results/fuzz_summary.txt](reports/results/fuzz_summary.txt) so
+the figures quoted here can be checked against a record rather than taken on
+trust. This is the harness that originally caught the floating-point key-tie
+bug described above.
 
 ## Quick start - core (no ROS required)
 

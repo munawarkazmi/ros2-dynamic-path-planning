@@ -16,8 +16,21 @@ all: test fuzz
 $(BUILD)/fuzz_planners: tests/fuzz_planners.cpp $(OBJS) | $(BUILD)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< $(OBJS) -o $@
 
+# The counts this prints are quoted by the README and by the site, and until
+# now they lived only in whatever terminal last ran it. Nothing could check
+# them against anything, which made them the one figure on the site with no
+# record behind it. Recorded here instead.
+#
+# Written through a temporary file so a failed run cannot leave behind a
+# summary describing a clean one. The binary exits non-zero when a replan
+# disagrees with Dijkstra, make stops at that line, and the committed summary
+# goes on describing the last run that actually passed.
+FUZZ_REPORT := ../reports/results/fuzz_summary.txt
+
 fuzz: $(BUILD)/fuzz_planners
-	./$(BUILD)/fuzz_planners
+	./$(BUILD)/fuzz_planners > $(FUZZ_REPORT).tmp
+	@mv -f $(FUZZ_REPORT).tmp $(FUZZ_REPORT)
+	@cat $(FUZZ_REPORT)
 
 benchmark: $(BUILD)/benchmark
 	@echo "run: $(BUILD)/benchmark --map ../maps/indoor_grid.pgm --out ../reports/results/replan_benchmark.csv"
