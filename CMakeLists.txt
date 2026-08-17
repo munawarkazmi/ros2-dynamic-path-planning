@@ -73,4 +73,16 @@ install(FILES planner_plugins.xml
   DESTINATION share/${PROJECT_NAME}
 )
 
+# Integration test for the plugin boundary: launches planner_server with one of
+# these planners, drives it to active and asserts on the path that comes back
+# out of ComputePathToPose. The algorithms themselves are covered by the unit
+# suites under core/tests, which do not need ROS at all.
+if(BUILD_TESTING)
+  find_package(ament_cmake_test REQUIRED)
+  find_package(launch_testing_ament_cmake REQUIRED)
+  # Generous timeout: the server has to configure, activate and build a costmap
+  # before it advertises the action.
+  add_launch_test(test/test_planner_server_launch.py TIMEOUT 180)
+endif()
+
 ament_package()
