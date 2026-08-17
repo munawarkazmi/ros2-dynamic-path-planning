@@ -1,0 +1,50 @@
+# test/test_planner_params.yaml
+#
+# Parameters for the launch test in test_planner_server_launch.py.
+#
+# This has to be a real nested YAML rather than a dict passed to the Node
+# action. global_costmap is a separate node owned by planner_server, so keys
+# like "global_costmap.global_costmap.ros__parameters.plugins" passed inline
+# become literal parameter names on planner_server and the costmap never sees
+# them. It then silently falls back to its own defaults, which are a 5 by 5
+# metre costmap with a static layer waiting forever for a map.
+
+planner_server:
+  ros__parameters:
+    use_sim_time: false
+    expected_planner_frequency: 1.0
+    planner_plugins: ["GridBased"]
+    GridBased:
+      # Overridden from the launch file so either planner can be exercised.
+      plugin: "ros2_dynamic_path_planning/DStarLitePlanner"
+
+global_costmap:
+  global_costmap:
+    ros__parameters:
+      use_sim_time: false
+      update_frequency: 2.0
+      publish_frequency: 2.0
+      global_frame: map
+      robot_base_frame: base_link
+
+      # Fixed 10 by 10 metre window with its origin at the world origin, so
+      # the test's start and goal are unambiguously inside it.
+      rolling_window: false
+      width: 10
+      height: 10
+      resolution: 0.1
+      origin_x: 0.0
+      origin_y: 0.0
+
+      # No static layer means no map server to wait for, and no obstacle layer
+      # means no sensor topics to fake. With track_unknown_space false the
+      # master grid initialises to free space, so the costmap is a known-empty
+      # world: exactly one thing under test, the plugin boundary.
+      track_unknown_space: false
+      plugins: ["inflation_layer"]
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        inflation_radius: 0.2
+        cost_scaling_factor: 3.0
+
+      always_send_full_costmap: true

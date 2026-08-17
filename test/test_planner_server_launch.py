@@ -45,37 +45,21 @@ PLANNER_PLUGIN = os.environ.get(
 GLOBAL_FRAME = "map"
 ROBOT_FRAME = "base_link"
 
+# Both well inside the 10 by 10 metre costmap declared in the params file.
 START_XY = (1.0, 1.0)
-GOAL_XY = (8.0, 8.0)
+GOAL_XY = (7.0, 7.0)
+
+# The costmap is a separate node owned by planner_server, so its parameters
+# cannot be passed as flat dotted keys on planner_server: they would become
+# literal parameter names and the costmap would silently use its own defaults.
+# They have to arrive as a properly nested YAML file.
+PARAMS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           "test_planner_params.yaml")
 
 
 @pytest.mark.launch_test
 @launch_testing.markers.keep_alive
 def generate_test_description():
-    planner_params = {
-        "use_sim_time": False,
-        "expected_planner_frequency": 1.0,
-        "planner_plugins": ["GridBased"],
-        "GridBased.plugin": PLANNER_PLUGIN,
-        # An inflation-only costmap needs neither a map server nor sensors.
-        "global_costmap.global_costmap.ros__parameters.update_frequency": 2.0,
-        "global_costmap.global_costmap.ros__parameters.publish_frequency": 2.0,
-        "global_costmap.global_costmap.ros__parameters.global_frame": GLOBAL_FRAME,
-        "global_costmap.global_costmap.ros__parameters.robot_base_frame": ROBOT_FRAME,
-        "global_costmap.global_costmap.ros__parameters.rolling_window": False,
-        "global_costmap.global_costmap.ros__parameters.width": 10,
-        "global_costmap.global_costmap.ros__parameters.height": 10,
-        "global_costmap.global_costmap.ros__parameters.resolution": 0.1,
-        "global_costmap.global_costmap.ros__parameters.origin_x": 0.0,
-        "global_costmap.global_costmap.ros__parameters.origin_y": 0.0,
-        "global_costmap.global_costmap.ros__parameters.plugins": ["inflation_layer"],
-        "global_costmap.global_costmap.ros__parameters.inflation_layer.plugin":
-            "nav2_costmap_2d::InflationLayer",
-        "global_costmap.global_costmap.ros__parameters.inflation_layer.inflation_radius": 0.2,
-        "global_costmap.global_costmap.ros__parameters.inflation_layer.cost_scaling_factor": 3.0,
-        "global_costmap.global_costmap.ros__parameters.always_send_full_costmap": True,
-    }
-
     return launch.LaunchDescription(
         [
             # The costmap needs a transform chain from its global frame down to
@@ -98,7 +82,10 @@ def generate_test_description():
                 executable="planner_server",
                 name="planner_server",
                 output="screen",
-                parameters=[planner_params],
+                # The YAML carries the nested costmap config; the dict after it
+                # overrides only planner_server's own plugin choice, which is a
+                # parameter of this node and so is fine as a dotted key.
+                parameters=[PARAMS_FILE, {"GridBased.plugin": PLANNER_PLUGIN}],
             ),
             # autostart drives planner_server through configure and activate,
             # so a plugin that fails to load shows up as a lifecycle failure
@@ -151,6 +138,28 @@ class TestPlannerServerServesAPath(unittest.TestCase):
             client.wait_for_server(timeout_sec=60.0),
             "compute_path_to_pose action server never appeared, so planner_server "
             "did not reach the active state",
+        )
+
+        # Precondition, checked explicitly because getting it wrong once cost an
+        # afternoon: if the params file does not reach the costmap it falls back
+        # to its own defaults, which are a 5 by 5 metre grid with a static layer
+        # waiting forever for a map. The planning result then fails for reasons
+        # that have nothing to do with the plugin. Fail here, with a clear
+        # message, rather than 30 seconds later with a confusing one.
+        startup = "".join(
+            event.text.decode("utf-8", errors="replace") for event in proc_output
+        )
+        self.assertIn(
+            'Using plugin "inflation_layer"',
+            startup,
+            "the costmap did not load the inflation layer, so the params file "
+            "never reached it",
+        )
+        self.assertNotIn(
+            'Using plugin "static_layer"',
+            startup,
+            "the costmap loaded a static layer, so it is using its own defaults "
+            "rather than test_planner_params.yaml and will never populate",
         )
 
         goal = ComputePathToPose.Goal()
