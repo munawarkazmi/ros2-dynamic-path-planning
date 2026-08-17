@@ -57,19 +57,26 @@ jobs:
         run: ctest --test-dir core/build-cmake --output-on-failure
 
   ros:
-    name: Nav2 plugin build (ROS 2 Humble)
+    name: Nav2 plugin build and launch test (ROS 2 Humble)
     runs-on: ubuntu-latest
     container: ros:humble
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Nav2 build dependencies
+      - name: Install Nav2 build and test dependencies
         run: |
           apt-get update
           apt-get install -y \
             ros-humble-nav2-core \
             ros-humble-nav2-costmap-2d \
-            ros-humble-nav2-util
+            ros-humble-nav2-util \
+            ros-humble-nav2-planner \
+            ros-humble-nav2-lifecycle-manager \
+            ros-humble-nav2-msgs \
+            ros-humble-launch-testing-ament-cmake \
+            ros-humble-launch-testing-ros \
+            ros-humble-tf2-ros \
+            ros-humble-rclpy
         shell: bash
 
       - name: colcon build
@@ -79,4 +86,22 @@ jobs:
           cp -r "$GITHUB_WORKSPACE" /ws/src/ros2_dynamic_path_planning
           cd /ws
           colcon build --packages-select ros2_dynamic_path_planning --event-handlers console_direct+
+        shell: bash
+
+      # Brings up a real planner_server with the plugin, drives it to active and
+      # calls ComputePathToPose. Covers the boundary the core unit tests cannot.
+      - name: colcon test (launch_testing integration)
+        run: |
+          . /opt/ros/humble/setup.sh
+          cd /ws
+          colcon test --packages-select ros2_dynamic_path_planning \
+            --event-handlers console_direct+ --return-code-on-test-failure
+        shell: bash
+
+      - name: Test results
+        if: always()
+        run: |
+          . /opt/ros/humble/setup.sh
+          cd /ws
+          colcon test-result --all --verbose
         shell: bash
