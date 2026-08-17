@@ -68,3 +68,6 @@ test_results/
 
 # Generated from maps/indoor_grid.png by core/tools/png_to_pgm.py
 *.pgm
+
+# CMake out-of-source build for the GoogleTest suite (core/CMakeLists.txt)
+build-cmake/

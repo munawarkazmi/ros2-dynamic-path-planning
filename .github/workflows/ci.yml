@@ -39,6 +39,23 @@ jobs:
           name: replan-benchmark-ci
           path: /tmp/results/replan_benchmark_ci.csv
 
+  core-gtest:
+    name: Core unit tests (GoogleTest + CTest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure (fetches GoogleTest, pinned to v1.15.2)
+        run: cmake -S core -B core/build-cmake -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build core/build-cmake --parallel
+
+      # One CTest case per seed, so a failure names the scenario rather than
+      # only the suite. --output-on-failure prints the oracle comparison.
+      - name: Run unit tests
+        run: ctest --test-dir core/build-cmake --output-on-failure
+
   ros:
     name: Nav2 plugin build (ROS 2 Humble)
     runs-on: ubuntu-latest
