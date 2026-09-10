@@ -20,6 +20,7 @@ Run:  colcon test --packages-select ros2_dynamic_path_planning
 """
 
 import os
+import time
 import unittest
 
 import launch
@@ -199,11 +200,29 @@ class TestPlannerServerServesAPath(unittest.TestCase):
         goal.planner_id = "GridBased"
         goal.use_start = True  # avoids depending on a localised robot pose
 
-        send = client.send_goal_async(goal)
-        rclpy.spin_until_future_complete(self.node, send, timeout_sec=30.0)
-        handle = send.result()
+        # The action server appearing means planner_server is active. It does
+        # not mean the costmap has finished its first update, and a goal that
+        # arrives in that window is rejected outright. On CI that has happened,
+        # so the first goal is retried rather than trusted: a rejection here is
+        # a statement about timing, and only a rejection that persists is a
+        # statement about the plugin.
+        handle = None
+        deadline = time.monotonic() + 30.0
+        attempts = 0
+        while time.monotonic() < deadline:
+            attempts += 1
+            send = client.send_goal_async(goal)
+            rclpy.spin_until_future_complete(self.node, send, timeout_sec=10.0)
+            handle = send.result()
+            if handle is not None and handle.accepted:
+                break
+            time.sleep(0.5)
         self.assertIsNotNone(handle, "no response to the goal request")
-        self.assertTrue(handle.accepted, "planner_server rejected the goal")
+        self.assertTrue(
+            handle.accepted,
+            f"planner_server rejected the goal on all {attempts} attempts over "
+            "30 s, so this is the plugin or the costmap rather than startup timing",
+        )
 
         result_future = handle.get_result_async()
         rclpy.spin_until_future_complete(self.node, result_future, timeout_sec=30.0)
