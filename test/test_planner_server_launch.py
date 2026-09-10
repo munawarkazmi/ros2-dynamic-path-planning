@@ -34,7 +34,21 @@ import rclpy
 from action_msgs.msg import GoalStatus
 from geometry_msgs.msg import PoseStamped
 from nav2_msgs.action import ComputePathToPose
+from nav2_msgs.srv import ManageLifecycleNodes
+from nav_msgs.msg import OccupancyGrid
 from rclpy.action import ActionClient
+from rclpy.qos import (
+    QoSDurabilityPolicy,
+    QoSHistoryPolicy,
+    QoSProfile,
+    QoSReliabilityPolicy,
+)
+from rclpy.time import Time
+from tf2_ros.buffer import Buffer
+from tf2_ros.transform_listener import TransformListener
+
+LIFECYCLE_MANAGER = "lifecycle_manager_test"
+COSTMAP_TOPIC = "/global_costmap/costmap"
 
 # The plugin under test. Both planners implement nav2_core::GlobalPlanner
 # through the same adapter path, so either can be substituted here; D* Lite
@@ -88,37 +102,30 @@ def generate_test_description():
                 # parameter of this node and so is fine as a dotted key.
                 parameters=[PARAMS_FILE, {"GridBased.plugin": PLANNER_PLUGIN}],
             ),
-            # autostart drives planner_server through configure and activate,
-            # so a plugin that fails to load shows up as a lifecycle failure
-            # rather than as a silent absence.
+            # autostart is off on purpose. With it on, the lifecycle manager
+            # races the static transform publishers: activating the costmap is
+            # what makes it look up map -> base_link, and on a CI runner that
+            # lookup arrived 67 ms after the publishers started, before the
+            # transforms had propagated. Any fixed delay only widens that
+            # margin; it does not remove the race.
             #
-            # Held back deliberately. Activating the costmap is what makes it
-            # look up map -> base_link, and on a CI runner that lookup has
-            # arrived 67 ms after the static publishers started, before the
-            # transforms had propagated, which logged
-            # 'Invalid frame ID "map" ... frame does not exist' and failed a
-            # test about plugin loading. This is a delay, not a synchronisation:
-            # it widens a 67 ms margin to five seconds rather than removing the
-            # race. The output filter in test_plugin_loaded_without_error is
-            # what keeps a slow runner producing a slow test instead of a red
-            # one.
-            launch.actions.TimerAction(
-                period=5.0,
-                actions=[
-                    launch_ros.actions.Node(
-                        package="nav2_lifecycle_manager",
-                        executable="lifecycle_manager",
-                        name="lifecycle_manager_test",
-                        output="screen",
-                        parameters=[
-                            {
-                                "use_sim_time": False,
-                                "autostart": True,
-                                "node_names": ["planner_server"],
-                                "bond_timeout": 0.0,
-                            }
-                        ],
-                    )
+            # Instead the test drives bringup itself, once it has confirmed the
+            # transform is actually available. That also makes the plugin
+            # failure louder rather than quieter: the STARTUP service returns a
+            # boolean, so a plugin that fails to load is a false return here
+            # rather than something to be inferred from the log.
+            launch_ros.actions.Node(
+                package="nav2_lifecycle_manager",
+                executable="lifecycle_manager",
+                name=LIFECYCLE_MANAGER,
+                output="screen",
+                parameters=[
+                    {
+                        "use_sim_time": False,
+                        "autostart": False,
+                        "node_names": ["planner_server"],
+                        "bond_timeout": 0.0,
+                    }
                 ],
             ),
             launch_testing.actions.ReadyToTest(),
@@ -155,6 +162,77 @@ class TestPlannerServerServesAPath(unittest.TestCase):
     def setUpClass(cls):
         rclpy.init()
         cls.node = rclpy.create_node("planner_boundary_test")
+        cls.tf_buffer = Buffer()
+        cls.tf_listener = TransformListener(cls.tf_buffer, cls.node)
+        cls.costmap_seen = False
+
+        # Subscribed before bringup on purpose, for two reasons. nav2 only
+        # publishes the costmap when it already has a subscriber, so arriving
+        # late can mean waiting a whole publish cycle for the first message.
+        # And the publisher is KeepLast(1), transient_local, reliable, so this
+        # profile has to match it exactly: requesting transient_local against a
+        # volatile publisher is an incompatible pair and delivers nothing at
+        # all, which would look like the costmap never publishing.
+        cls.node.create_subscription(
+            OccupancyGrid,
+            COSTMAP_TOPIC,
+            cls._on_costmap,
+            QoSProfile(
+                depth=1,
+                history=QoSHistoryPolicy.KEEP_LAST,
+                reliability=QoSReliabilityPolicy.RELIABLE,
+                durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
+            ),
+        )
+
+        # Three waits, in the order the system actually becomes ready. Each one
+        # replaces an assumption the previous version of this test was making.
+        assert cls._spin_until(
+            lambda: cls.tf_buffer.can_transform(GLOBAL_FRAME, ROBOT_FRAME, Time()),
+            30.0,
+        ), (
+            f"{GLOBAL_FRAME} -> {ROBOT_FRAME} never became available, so the "
+            "static transform publishers did not come up"
+        )
+
+        assert cls._startup(), (
+            "the lifecycle manager could not bring planner_server up. With a "
+            "transform already available this is the plugin failing to load or "
+            "to configure, not a startup race"
+        )
+
+        assert cls._spin_until(lambda: cls.costmap_seen, 30.0), (
+            f"planner_server reached active but never published {COSTMAP_TOPIC}, "
+            "so the costmap never completed an update"
+        )
+
+    @classmethod
+    def _on_costmap(cls, _msg):
+        cls.costmap_seen = True
+
+    @classmethod
+    def _spin_until(cls, predicate, timeout_sec):
+        deadline = time.monotonic() + timeout_sec
+        while time.monotonic() < deadline:
+            rclpy.spin_once(cls.node, timeout_sec=0.1)
+            if predicate():
+                return True
+        return False
+
+    @classmethod
+    def _startup(cls, timeout_sec=60.0):
+        """Ask the lifecycle manager to configure and activate, and report."""
+        client = cls.node.create_client(
+            ManageLifecycleNodes, f"/{LIFECYCLE_MANAGER}/manage_nodes"
+        )
+        if not client.wait_for_service(timeout_sec=timeout_sec):
+            return False
+        request = ManageLifecycleNodes.Request()
+        request.command = ManageLifecycleNodes.Request.STARTUP
+        future = client.call_async(request)
+        rclpy.spin_until_future_complete(cls.node, future, timeout_sec=timeout_sec)
+        response = future.result()
+        return response is not None and response.success
 
     @classmethod
     def tearDownClass(cls):
@@ -164,8 +242,8 @@ class TestPlannerServerServesAPath(unittest.TestCase):
     def test_compute_path_to_pose_returns_a_usable_path(self, proc_output):
         client = ActionClient(self.node, ComputePathToPose, "compute_path_to_pose")
 
-        # Generous: the server has to configure, activate and build a costmap
-        # before it will advertise the action.
+        # setUpClass has already brought the system up and seen a costmap, so
+        # the server is expected to be there; this is a check, not a wait.
         self.assertTrue(
             client.wait_for_server(timeout_sec=60.0),
             "compute_path_to_pose action server never appeared, so planner_server "
@@ -200,12 +278,11 @@ class TestPlannerServerServesAPath(unittest.TestCase):
         goal.planner_id = "GridBased"
         goal.use_start = True  # avoids depending on a localised robot pose
 
-        # The action server appearing means planner_server is active. It does
-        # not mean the costmap has finished its first update, and a goal that
-        # arrives in that window is rejected outright. On CI that has happened,
-        # so the first goal is retried rather than trusted: a rejection here is
-        # a statement about timing, and only a rejection that persists is a
-        # statement about the plugin.
+        # With bringup driven explicitly and a costmap already published, a
+        # rejection here should not happen at all. The retry stays as a bounded
+        # guard so that if some readiness signal is still missing, this surfaces
+        # as a slow test rather than a red one, and the message below says how
+        # many attempts it took.
         handle = None
         deadline = time.monotonic() + 30.0
         attempts = 0
