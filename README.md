@@ -172,6 +172,13 @@ D* Lite, tests that prove it, a fair benchmark, and numbers regenerated from
 real runs with the exact code and seed that produced them. The full record is
 in the git history.
 
+## How this fits the research program
+
+- [plan-failure-bench](https://github.com/munawarkazmi/plan-failure-bench) measures *how* LLM task planners fail: one planted trap per instruction, answers in a machine-checkable action language, every label a proof, and no human or model judging anywhere;
+- [ros2-llm-safety-verifier](https://github.com/munawarkazmi/ros2-llm-safety-verifier) *detects* unsafe trajectories deterministically, sitting between the model and Nav2;
+- **this repository** plans *provably-correct* paths, with A* and D* Lite measured against Dijkstra ground truth;
+- [llm-nav-shield](https://github.com/munawarkazmi/llm-nav-shield) closes the loop: detect, then recover with a guaranteed-safe alternative or halt when none exists, and re-check a plan already in flight when the map beneath it moves.
+
 ## License
 
 MIT (c) 2025-2026 Munawar Kazmi
