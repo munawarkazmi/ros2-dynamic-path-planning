@@ -90,22 +90,53 @@ def generate_test_description():
             # autostart drives planner_server through configure and activate,
             # so a plugin that fails to load shows up as a lifecycle failure
             # rather than as a silent absence.
-            launch_ros.actions.Node(
-                package="nav2_lifecycle_manager",
-                executable="lifecycle_manager",
-                name="lifecycle_manager_test",
-                output="screen",
-                parameters=[
-                    {
-                        "use_sim_time": False,
-                        "autostart": True,
-                        "node_names": ["planner_server"],
-                        "bond_timeout": 0.0,
-                    }
+            #
+            # Held back deliberately. Activating the costmap is what makes it
+            # look up map -> base_link, and on a CI runner that lookup has
+            # arrived 67 ms after the static publishers started, before the
+            # transforms had propagated, which logged
+            # 'Invalid frame ID "map" ... frame does not exist' and failed a
+            # test about plugin loading. This is a delay, not a synchronisation:
+            # it widens a 67 ms margin to five seconds rather than removing the
+            # race. The output filter in test_plugin_loaded_without_error is
+            # what keeps a slow runner producing a slow test instead of a red
+            # one.
+            launch.actions.TimerAction(
+                period=5.0,
+                actions=[
+                    launch_ros.actions.Node(
+                        package="nav2_lifecycle_manager",
+                        executable="lifecycle_manager",
+                        name="lifecycle_manager_test",
+                        output="screen",
+                        parameters=[
+                            {
+                                "use_sim_time": False,
+                                "autostart": True,
+                                "node_names": ["planner_server"],
+                                "bond_timeout": 0.0,
+                            }
+                        ],
+                    )
                 ],
             ),
             launch_testing.actions.ReadyToTest(),
         ]
+    )
+
+
+# nav2's costmap logs 'Invalid frame ID "map" ... frame does not exist'
+# when it activates before the static transforms have propagated. That
+# substring collides with pluginlib's class-not-found message, which is the
+# thing test_plugin_loaded_without_error is actually looking for, so a
+# transient startup warning used to fail a test about plugin loading. Drop
+# only those lines, and only those: anything else saying "does not exist"
+# still fails.
+def _without_transform_warnings(text):
+    return "\n".join(
+        line
+        for line in text.splitlines()
+        if "Invalid frame ID" not in line and "frame does not exist" not in line
     )
 
 
@@ -205,8 +236,10 @@ class TestPlannerServerServesAPath(unittest.TestCase):
     def test_plugin_loaded_without_error(self, proc_output):
         # pluginlib reports a missing or misdeclared class here, and the message
         # is far more useful than the lifecycle failure it causes downstream.
-        combined = "".join(
-            event.text.decode("utf-8", errors="replace") for event in proc_output
+        combined = _without_transform_warnings(
+            "".join(
+                event.text.decode("utf-8", errors="replace") for event in proc_output
+            )
         )
         for forbidden in ("Failed to create global planner", "does not exist"):
             self.assertNotIn(
