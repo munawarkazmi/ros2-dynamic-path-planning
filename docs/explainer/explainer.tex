@@ -163,6 +163,14 @@ The fix was to stop using fractions. Distances are measured in whole numbers, a 
 Finding this needed a test that could not be argued with: 23,748 randomly generated scenarios producing 185,237 repairs, each one compared against a slow, simple, obviously correct reference method, demanding exact equality. Zero mismatches. The test runs automatically on every change to the code, and it is what caught the problem in the first place.
 \end{quotebox}
 
+\section{Where this ends up}
+
+This planner is not only a benchmark. A separate project puts a safety checker between a language model and a robot, and when the model's proposed route is rejected, this planner computes the replacement. That replacement is then checked again before the robot moves.
+
+Two things from that use are worth knowing here. The routes it produces clear the safety check by a wide margin, 17.7 centimetres of clearance where 10.5 would have done, because they are planned on a map whose obstacles have already been widened by more than the robot. And the searching is easy: every replacement came out within a sixth of the straight-line distance, so not one of them needed the incremental repair this document spends most of its length measuring.
+
+That is not a criticism of repair. It is the boundary of when repair pays. It pays when a robot is part-way along a route and the world changes in front of it. It pays nothing when you are planning once, from scratch, and throwing the result away afterwards.
+
 \section{What this does not show}
 
 Everything here is measured in simulation, on one building map, on one computer. The timings depend on the hardware; the counts of positions examined do not. No physical robot was involved.
