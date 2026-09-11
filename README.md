@@ -46,8 +46,11 @@ Rerunning with the same seed reproduces the same scenarios; timings vary with ha
 
 Both figures below are actual algorithm output on the repository's occupancy map
 (784 x 1168 cells at 0.05 m = 39.2 m x 58.4 m indoor floor plan), rendered by
-[core/tools/render_figures.py](core/tools/render_figures.py) from data dumped by
-[core/tools/dump_scenario.cpp](core/tools/dump_scenario.cpp).
+[core/tools/render_figures.py](core/tools/render_figures.py) and
+[core/tools/render_replan_gif.py](core/tools/render_replan_gif.py) from data
+dumped by [core/tools/dump_scenario.cpp](core/tools/dump_scenario.cpp). The
+animation sweeps a marker along those committed coordinates; no pose in it was
+integrated and no timing is claimed.
 
 **A global plan across the building.** A* expands 125,760 nodes (blue cloud) to
 find this 919-cell path.
@@ -57,6 +60,11 @@ find this 919-cell path.
 **Someone steps into the route.** D* Lite repairs the same journey around the
 new obstacle by expanding just **256** vertices - reusing everything from its
 previous search that is still valid.
+
+![The same run in the order it happened: the robot walks the planned route, an
+obstacle appears across it, and D* Lite repairs the journey to the same goal](docs/figures/replan.gif)
+
+Both paths at once, for reference, and the obstacle that separates them:
 
 ![Replanning around a new obstacle](docs/figures/replan_obstacle.png)
 
