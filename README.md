@@ -64,10 +64,6 @@ previous search that is still valid.
 ![The same run in the order it happened: the robot walks the planned route, an
 obstacle appears across it, and D* Lite repairs the journey to the same goal](docs/figures/replan.gif)
 
-Both paths at once, for reference, and the obstacle that separates them:
-
-![Replanning around a new obstacle](docs/figures/replan_obstacle.png)
-
 ## Plain-language guide
 
 For a non-specialist reader there is a five-page guide,
